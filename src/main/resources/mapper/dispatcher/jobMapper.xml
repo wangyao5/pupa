@@ -1,0 +1,112 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pupa.dispatch.mapper.JobMapper">
+    <resultMap type="com.pupa.dispatch.mapper.JobInfo" id="jobMap">
+        <result column="id" property="id" javaType="int"/><!--id主键-->
+        <result column="name" property="name" javaType="string"/><!--Job英文名-->
+        <result column="group" property="group" javaType="string"/><!--Job英文分组-->
+        <result column="description" property="description" javaType="string"/><!--JobInfo 描述信息-->
+        <result column="owner" property="owner" javaType="string"/><!--责任人信息-->
+        <result column="type" property="type" javaType="int"/><!--类型(0:CMD JobInfo;1:Java JobInfo)-->
+        <result column="content" property="content" javaType="string"/><!--JobInfo 具体内容-->
+        <result column="create_time" property="createTime" javaType="java.sql.Date"/><!--创建时间-->
+        <result column="update_time" property="updateTime" javaType="java.sql.Date"/><!--更新时间-->
+        <result column="enable" property="enable" javaType="boolean"/><!--是否有效（0:无效；1:有效)-->
+        <result column="cron" property="cron" javaType="string"/><!--定时规则-->
+        <result column="params" property="params" javaType="string"/><!--job参数-->
+    </resultMap>
+
+    <select id="findAll" resultMap="jobMap">
+        select * from dispatch
+    </select>
+
+    <insert id="insert">
+        insert into dispatch(name,`group`,description, owner,type,content,create_time,enable,cron,params)
+        values(#{jobInfo.name, jdbcType=VARCHAR},#{jobInfo.group, jdbcType=VARCHAR},#{jobInfo.description, jdbcType=VARCHAR},
+        #{jobInfo.owner, jdbcType=VARCHAR}, #{jobInfo.type, jdbcType=NUMERIC},#{jobInfo.content, jdbcType=VARCHAR},
+        NOW(),0,#{jobInfo.cron, jdbcType=VARCHAR},#{jobInfo.params, jdbcType=VARCHAR})
+    </insert>
+
+    <update id="update">
+        <if test="jobInfo != null and jobInfo.id != null">
+            update dispatch
+            <trim prefix="SET" prefixOverrides=",">
+                ,update_time=now()
+                <if test="jobInfo.name != null">
+                    ,name=#{jobInfo.name}
+                </if>
+                <if test="jobInfo.group != null">
+                    ,`group`=#{jobInfo.group}
+                </if>
+                <if test="jobInfo.description != null">
+                    ,description=#{jobInfo.description}
+                </if>
+                <if test="jobInfo.owner != null">
+                    ,owner=#{jobInfo.owner}
+                </if>
+                <if test="jobInfo.type != null">
+                    ,type=#{jobInfo.type}
+                </if>
+                <if test="jobInfo.content != null">
+                    ,content=#{jobInfo.content}
+                </if>
+                <if test="jobInfo.enable != null">
+                    ,enable=#{jobInfo.enable}
+                </if>
+                <if test="jobInfo.cron != null">
+                    ,cron=#{jobInfo.cron}
+                </if>
+                <if test="jobInfo.params != null">
+                    ,params=#{jobInfo.params}
+                </if>
+            </trim>
+            where id=#{jobInfo.id}
+        </if>
+    </update>
+
+    <delete id="del">
+        delete from dispatch where id=#{id};
+    </delete>
+
+    <select id="findOne" resultMap="jobMap">
+        select * from dispatch where id=#{id}
+    </select>
+
+    <select id="findQuery" resultMap="jobMap">
+        select * from dispatch
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="message != null">
+                AND name like CONCAT('%',#{message},'%')
+                OR description like CONCAT('%',#{message},'%')
+                OR owner like CONCAT('%',#{message},'%')
+            </if>
+            <if test="type != null">
+                AND type=#{type}
+            </if>
+            <if test="enable != null">
+                AND enable=#{enable}
+            </if>
+        </trim>
+        limit #{start},#{size}
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*) from dispatch
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="message != null">
+                AND name like CONCAT('%',#{message},'%')
+                OR description like CONCAT('%',#{message},'%')
+                OR owner like CONCAT('%',#{message},'%')
+            </if>
+            <if test="type != null">
+                AND type=#{type}
+            </if>
+            <if test="enable != null">
+                AND enable=#{enable}
+            </if>
+        </trim>
+    </select>
+
+</mapper>
